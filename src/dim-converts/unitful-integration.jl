@@ -41,6 +41,10 @@ function eltype_extrema(values)
     return new_eltype, (new_min, new_max)
 end
 
+function eltype_extrema(values::ClosedInterval)
+    return eltype_extrema(endpoints(values))
+end
+
 function new_unit(unit, values)
     new_eltype, extrema = eltype_extrema(values)
     # empty vector case:
@@ -103,6 +107,12 @@ unit_convert(::Automatic, x) = x
 function unit_convert(unit::T, x::AbstractArray) where T <: Union{Type{<:Unitful.AbstractQuantity}, Unitful.FreeUnits, Unitful.Unit}
     return unit_convert.(Ref(unit), x)
 end
+
+function unit_convert(unit::T, x::ClosedInterval) where T <: Union{Type{<:Unitful.AbstractQuantity}, Unitful.FreeUnits, Unitful.Unit}
+    int = endpoints(x)
+    return ClosedInterval(unit_convert.(Ref(unit), int)...)
+end
+
 
 # We always convert to preferred unit!
 function unit_convert(unit::T, value) where T <: Union{Type{<:Unitful.AbstractQuantity}, Unitful.FreeUnits, Unitful.Unit}
@@ -179,12 +189,16 @@ function get_ticks(conversion::UnitfulConversion, ticks, scale, formatter, vmin,
     return tick_vals, labels
 end
 
+_check_convert(unit, values) = unit_convert(unit, values)
+_check_convert(unit, value::ClosedInterval) = unit_convert(unit, minimum(value))
+
 function convert_dim_observable(conversion::UnitfulConversion, value_obs::Observable, deregister)
     result = map(conversion.unit, value_obs; ignore_equal_values=true) do unit, values
         if !isempty(values)
             # try if conversion works, to through error if not!
             # Is there a function for this to check in Unitful?
-            unit_convert(unit, values[1])
+
+            _check_convert(unit, values)
         end
         update_extrema!(conversion, value_obs)
         return unit_convert(conversion.unit[], values)

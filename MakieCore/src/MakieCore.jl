@@ -10,7 +10,7 @@ using Observables: to_value
 using Base: RefValue
 using GeometryBasics
 using ColorTypes
-using IntervalSets: ClosedInterval, Interval
+using IntervalSets: ClosedInterval, Interval, endpoints
 
 include("types.jl")
 include("attributes.jl")

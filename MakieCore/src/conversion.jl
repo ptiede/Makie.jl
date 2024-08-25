@@ -110,6 +110,15 @@ function get_element_type(arr::AbstractArray{T}) where {T}
     end
 end
 
+function get_element_type(int::Interval)
+    T = eltype(int)
+    if T  === Any
+        return mapreduce(typeof, promote_type, endpoints(int))
+    else
+         return T
+    end 
+end
+
 types_for_plot_arguments(trait) = nothing
 function types_for_plot_arguments(P::Type{<:Plot}, Trait::ConversionTrait)
     p = types_for_plot_arguments(P)
